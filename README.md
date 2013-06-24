@@ -37,7 +37,7 @@ than existing vote by mail systems.
 
 
 Coercion issues
-+++++++++++++++
+---------------
 
 The first defense against coercion is the secret ballot: the property that one can not associate a ballot with its voter.
 Without this, its easy to reward or punish people for voting a particular way. This can fail for trivially small numbers of voters,
@@ -57,7 +57,7 @@ but hopefully we can prevent it from being a significant issue in actual electio
 keep coercion in mind, since it will potentially be an issue, you need to evaluate how bad of an issue it is!
 
 Verifiability issues
-++++++++++++++++++++
+--------------------
 
 This is where the existing system fail really badly. Of the three factors listed above, existing systems generally
 don't even to a partial job of any of them. Its purely done based on trusting the administration of the election.
@@ -75,20 +75,31 @@ The Design
 - A document (the `election description`) listing the public keys for the various involved servers, and any other needed meta dada (like what is being voted on)
 is published
 - A set of public keys for registered voters is published. This does not need to (and likely should not be) anonymized.
-- Equivalent but anonymized sets of public keys are constructed and published on a series of `AnonymizationServer`s.
-- A set of ballots signed with the anonymized public keys is constructed and published.
+- Voters cast their votes (process below)
+- Election ends
+- Votes are displayed (anonymously) in a public table
+- Subset of voters that has ballots signed is displayed in a public table (including their signature requests signed with their private keys)
 
-All communication is stateless, and all messages are idempotent. The origin of any requests not considered.
-All wellformed requests are replied to with either proof that the request should not be met, or sufficient evidence 
-to prove the server has committed fraud if the request is not met. 
+The vote submission process
+- Voter constructs a ballot containing their choices
+- A random integer is included in the ballot (The only reason here is that if the voter fails to produce a unique ballot, their vote is not counted)
+- The ballot is blinded (for RSA blind signatures)
+- The blinded ballot is signed with the voter's private key
+- The signed blinded ballot is send as a Signature Request to the Ballot server
+- The ballot server must respond with Signature Response containing a valid request signed with the same key,
+as well as a signature for the blinded ballot. If the voter has gotten a ballot signed previously, their old request will be included
+(which proves they have voted previously while also providing a copy of the signed ballot incase it was lost)
+- The voter unblinds their ballot's signature and anonymously submits it and the ballot to the Vote server
+- The vote server must respond with a Ballot Entry, which contains the ballot, and is signed with the Vote key.
 
-Ex: If you submit a ballot, signed with your anonymized private+public key pair, and a signed message from the last AnonymizationServer
-claiming your key is valid, a the ballot server must respond with one of:
-- a copy of your message, signed with its own key. This means if the final ballot list does not contain your vote,
-you can publish this response, which proves the ballot server signed, but did not include, a ballot, which is fraud.
-- another different ballot, signed with your private key. This is proof that your request to add this ballot is invalid.
+When the final votes are listed, the Voter may check that their vote is included (since it is unique, they can find it in the list).
+If their vote is not included, they can provide the signed vote they have from the vote server as proof their vote should have been included (and thus invalidating the election).
 
-If you do not get one of these responses, you can publish the request you sent to the ballot server for others (such as auditors, election monitors, media, etc)
-to try. Either they will get invalid responses (proving the fraud),
-or they will get valid responses which means they can verify the server behaved correctly and has no performed the requested action.
+In the number of votes in the final votes table is larger than the number of voters from which the ballot server can provide valid signature requests (signed with their private keys),
+the election is shown to be invalid.
 
+If the required response to a request from a voter is not given by one of the servers, the voter can proxy the request through any third party (such as news media or auditors) which will either
+get them a valid response or provide evidence that the election is invalid. Since all the requests are idempotent, and anonymity  and security are not lost by third parties viewing the messages, this is safe.
+
+The only major concern as far as secret ballot anonymity is determining the origin of the final vote submission. To solve this, submission through Tor is recommended. There is still potential for timing attacks,
+so some variable delay between getting the ballot signed and submitted is also recommended. The election could be broken up (temporally) into 2 stages to solve this.
