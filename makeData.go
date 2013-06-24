@@ -1,12 +1,10 @@
 package main
 
 import (
-	"github.com/Craig-Macomber/election/keys"
-
 	"code.google.com/p/goprotobuf/proto"
-
 	"crypto/rand"
 	"crypto/rsa"
+	"github.com/Craig-Macomber/election/keys"
 	"os"
 )
 

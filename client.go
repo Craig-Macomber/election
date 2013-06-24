@@ -2,16 +2,14 @@ package main
 
 import (
 	"bytes"
+	"code.google.com/p/goprotobuf/proto"
+	"crypto/rsa"
 	"fmt"
 	"github.com/Craig-Macomber/election/keys"
 	"github.com/Craig-Macomber/election/msg"
 	"github.com/Craig-Macomber/election/msg/msgs"
 	"github.com/Craig-Macomber/election/sign"
 	"net"
-
-	"code.google.com/p/goprotobuf/proto"
-
-	"crypto/rsa"
 )
 
 var ballotKey *rsa.PublicKey
