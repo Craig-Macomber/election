@@ -1,0 +1,42 @@
+package msgs;
+
+// Keys:
+// BallotKey: signs blinded ballots, at most one per voter
+// BallotTableKey: signs ballots that are submitted to be counted
+
+message PublicKey{
+    optional bytes N = 1;
+    optional int64 E = 2;
+}
+
+message PrivateKey{
+    optional PublicKey publicKey = 1;
+    optional bytes D = 2;
+    repeated bytes primes = 3;
+}
+
+message SignatureRequest {
+    optional PublicKey voterPublicKey = 1;
+    optional bytes blindedBallot = 2;
+    optional bytes voterSignature = 3;
+}
+
+message SignatureResponse {
+    optional SignatureRequest request = 1; // Original request
+    optional bytes blindedBallotSignature = 2; // blindedBallot signed with BallotKey
+}
+
+message Vote {
+    optional bytes ballot = 1;
+    optional bytes ballotSignature = 2; 
+}
+
+message BallotEntry {
+    optional uint64 id = 1;
+    optional bytes ballot = 2;
+}
+
+message VoteResponse {
+    optional bytes ballotEntry = 1;
+    optional bytes ballotEntrySignature = 2; // ballotEntry signed with BallotTableKey
+}
