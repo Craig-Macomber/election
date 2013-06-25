@@ -1,8 +1,9 @@
 package msgs;
 
 // Keys:
+// VoterListKey: signs voter public keys
 // BallotKey: signs blinded ballots, at most one per voter
-// BallotTableKey: signs ballots that are submitted to be counted
+// VoteKey: signs ballots that are submitted to be counted
 
 message PublicKey{
     optional bytes N = 1;
@@ -18,7 +19,8 @@ message PrivateKey{
 message SignatureRequest {
     optional PublicKey voterPublicKey = 1;
     optional bytes blindedBallot = 2;
-    optional bytes voterSignature = 3;
+    optional bytes voterSignature = 3; // blindedBallot signed with voterPublicKey
+    optional bytes keySignature = 4; // voterPublicKey signed with VoterListKey
 }
 
 message SignatureResponse {
@@ -28,7 +30,7 @@ message SignatureResponse {
 
 message Vote {
     optional bytes ballot = 1;
-    optional bytes ballotSignature = 2; 
+    optional bytes ballotSignature = 2; // ballot signed with BallotKey (unblinded)
 }
 
 message BallotEntry {
@@ -38,5 +40,5 @@ message BallotEntry {
 
 message VoteResponse {
     optional bytes ballotEntry = 1;
-    optional bytes ballotEntrySignature = 2; // ballotEntry signed with BallotTableKey
+    optional bytes ballotEntrySignature = 2; // ballotEntry signed with VoteKey
 }

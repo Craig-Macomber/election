@@ -73,6 +73,7 @@ type SignatureRequest struct {
 	VoterPublicKey   *PublicKey `protobuf:"bytes,1,opt,name=voterPublicKey" json:"voterPublicKey,omitempty"`
 	BlindedBallot    []byte     `protobuf:"bytes,2,opt,name=blindedBallot" json:"blindedBallot,omitempty"`
 	VoterSignature   []byte     `protobuf:"bytes,3,opt,name=voterSignature" json:"voterSignature,omitempty"`
+	KeySignature     []byte     `protobuf:"bytes,4,opt,name=keySignature" json:"keySignature,omitempty"`
 	XXX_unrecognized []byte     `json:"-"`
 }
 
@@ -97,6 +98,13 @@ func (m *SignatureRequest) GetBlindedBallot() []byte {
 func (m *SignatureRequest) GetVoterSignature() []byte {
 	if m != nil {
 		return m.VoterSignature
+	}
+	return nil
+}
+
+func (m *SignatureRequest) GetKeySignature() []byte {
+	if m != nil {
+		return m.KeySignature
 	}
 	return nil
 }

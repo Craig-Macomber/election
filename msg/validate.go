@@ -8,6 +8,7 @@ import (
 	"github.com/Craig-Macomber/election/sign"
 )
 
+// Does not check keySignature
 func ValidateSignatureRequest(m *msgs.SignatureRequest) error {
 	newBlindedBallot := m.BlindedBallot
 	newSig := m.VoterSignature

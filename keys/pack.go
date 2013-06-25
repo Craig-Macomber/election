@@ -1,3 +1,4 @@
+// Some helpers for converting keys between formats
 package keys
 
 import (
@@ -9,6 +10,16 @@ import (
 	"os"
 )
 
+// Serialize a public key to a string (useful for using keys as map keys)
+func StringKey(k *msgs.PublicKey) string {
+	keyBytes, err := proto.Marshal(k)
+	if err != nil {
+		panic(err)
+	}
+	return string(keyBytes)
+}
+
+// rsa -> msg
 func PackKey(k *rsa.PublicKey) *msgs.PublicKey {
 	var key msgs.PublicKey
 	key.N = k.N.Bytes()
@@ -17,6 +28,7 @@ func PackKey(k *rsa.PublicKey) *msgs.PublicKey {
 	return &key
 }
 
+// rsa -> msg
 func PackPrivateKey(k *rsa.PrivateKey) *msgs.PrivateKey {
 	var key msgs.PrivateKey
 	key.PublicKey = PackKey(&k.PublicKey)
@@ -27,6 +39,7 @@ func PackPrivateKey(k *rsa.PrivateKey) *msgs.PrivateKey {
 	return &key
 }
 
+// msg -> rsa
 func UnpackKey(k *msgs.PublicKey) *rsa.PublicKey {
 	var key rsa.PublicKey
 	key.N = new(big.Int)
@@ -35,6 +48,7 @@ func UnpackKey(k *msgs.PublicKey) *rsa.PublicKey {
 	return &key
 }
 
+// msg -> rsa
 func UnpackPrivateKey(k *msgs.PrivateKey) *rsa.PrivateKey {
 	var key rsa.PrivateKey
 	key.PublicKey = *UnpackKey(k.PublicKey)
@@ -46,8 +60,9 @@ func UnpackPrivateKey(k *msgs.PrivateKey) *rsa.PrivateKey {
 	return &key
 }
 
-func LoadKey(path string) *msgs.PublicKey {
-	// open input file
+// trivial read all helper
+func LoadBytes(path string) []byte{
+    // open input file
 	fi, err := os.Open(path)
 	if err != nil {
 		panic(err)
@@ -62,32 +77,25 @@ func LoadKey(path string) *msgs.PublicKey {
 	if err != nil {
 		panic(err)
 	}
+	return data
+}
+
+// Load key from file
+func LoadKey(path string) *msgs.PublicKey {
+	data:=LoadBytes(path)
 	var k msgs.PublicKey
-	err = proto.Unmarshal(data, &k)
+	err := proto.Unmarshal(data, &k)
 	if err != nil {
 		panic(err)
 	}
 	return &k
 }
 
+// Load key from file
 func LoadPrivateKey(path string) *msgs.PrivateKey {
-	// open input file
-	fi, err := os.Open(path)
-	if err != nil {
-		panic(err)
-	}
-	// close fi on exit and check for its returned error
-	defer func() {
-		if err := fi.Close(); err != nil {
-			panic(err)
-		}
-	}()
-	data, err := ioutil.ReadAll(fi)
-	if err != nil {
-		panic(err)
-	}
+	data:=LoadBytes(path)
 	var k msgs.PrivateKey
-	err = proto.Unmarshal(data, &k)
+	err := proto.Unmarshal(data, &k)
 	if err != nil {
 		panic(err)
 	}

@@ -1,3 +1,6 @@
+// Package vote provides all needed handlers to run a "Vote Server"
+// A Vote server does the actual collection of all the votes (signed ballots).
+// Each vote must be signed by the ballot server.
 package vote
 
 import (

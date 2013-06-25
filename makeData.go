@@ -6,6 +6,8 @@ import (
 	"crypto/rsa"
 	"github.com/Craig-Macomber/election/keys"
 	"os"
+	"runtime"
+	"sync"
 )
 
 func doFile(path string, data []byte) {
@@ -26,43 +28,32 @@ func doFile(path string, data []byte) {
 	}
 }
 
+func makeKey(publicPath, privatePath string) {
+	wg.Add(1)
+	go func() {
+		ballotKey, _ := rsa.GenerateKey(rand.Reader, 2048)
+		k := keys.PackPrivateKey(ballotKey)
+		private, err := proto.Marshal(k)
+		if err != nil {
+			panic(err)
+		}
+		public, err := proto.Marshal(k.PublicKey)
+		if err != nil {
+			panic(err)
+		}
+		doFile(privatePath, private)
+		doFile(publicPath, public)
+		wg.Done()
+	}()
+}
+
+var wg sync.WaitGroup
+
 func main() {
-	ballotKey, _ := rsa.GenerateKey(rand.Reader, 1024)
-	k := keys.PackPrivateKey(ballotKey)
-	private, err := proto.Marshal(k)
-	if err != nil {
-		panic(err)
-	}
-	public, err := proto.Marshal(k.PublicKey)
-	if err != nil {
-		panic(err)
-	}
-	doFile("serverPrivateData/ballotKey", private)
-	doFile("publicData/ballotKey", public)
-
-	voterKey, _ := rsa.GenerateKey(rand.Reader, 1024)
-	k = keys.PackPrivateKey(voterKey)
-	private, err = proto.Marshal(k)
-	if err != nil {
-		panic(err)
-	}
-	public, err = proto.Marshal(k.PublicKey)
-	if err != nil {
-		panic(err)
-	}
-	doFile("clientPrivateData/voterKey", private)
-	doFile("publicData/voterKey", public)
-
-	voteKey, _ := rsa.GenerateKey(rand.Reader, 1024)
-	k = keys.PackPrivateKey(voteKey)
-	private, err = proto.Marshal(k)
-	if err != nil {
-		panic(err)
-	}
-	public, err = proto.Marshal(k.PublicKey)
-	if err != nil {
-		panic(err)
-	}
-	doFile("serverPrivateData/voteKey", private)
-	doFile("publicData/voteKey", public)
+	runtime.GOMAXPROCS(4)
+	makeKey("publicData/ballotKey", "serverPrivateData/ballotKey")
+	makeKey("publicData/voterKey", "clientPrivateData/voterKey")
+	makeKey("publicData/voteKey", "serverPrivateData/voteKey")
+	makeKey("publicData/voterListKey", "serverPrivateData/voterListKey")
+	wg.Wait()
 }

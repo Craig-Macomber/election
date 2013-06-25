@@ -7,4 +7,6 @@ const (
 	SignatureResponse
 	Vote
 	VoteResponse
+	KeySignatureRequest
+	KeySignatureResponse
 )

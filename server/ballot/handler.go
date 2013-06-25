@@ -1,3 +1,8 @@
+// Package ballot provides all needed handlers to run a "Ballot Server"
+// A Ballot Server signes (blinded) ballot. It will sign at most one ballot per voter public key
+// A request for additional singings will be replied to with a copy of the response to the first request
+// Since the responses contain the request, which is signed by the voter, this serves as proof they
+// previously submitted a request.
 package ballot
 
 import (
@@ -10,14 +15,15 @@ import (
 	"github.com/Craig-Macomber/election/server"
 	"github.com/Craig-Macomber/election/sign"
 	"net"
+	"sync"
 )
 
-var ballotPrivateKey rsa.PrivateKey
+var ballotPrivateKey *rsa.PrivateKey
+var voteListKey *rsa.PublicKey
 
 func init() {
-	voterKey := keys.LoadKey("publicData/voterKey")
-	voterKeys[stringKey(voterKey)] = struct{}{}
-	ballotPrivateKey = *keys.UnpackPrivateKey(keys.LoadPrivateKey("serverPrivateData/ballotKey"))
+	ballotPrivateKey = keys.UnpackPrivateKey(keys.LoadPrivateKey("serverPrivateData/ballotKey"))
+	voteListKey = keys.UnpackKey(keys.LoadKey("publicData/voterListKey"))
 }
 
 // Map of voter public key -> msg.SignatureResponse containing the signed ballot
@@ -26,18 +32,24 @@ func init() {
 // As well as to prevent multiple voting (a request to vote with a different ballot returns
 // the saved previous response as proof they already had a ballot signed. (If they failed to receive it previously, they well get it again)
 // Note: when counting, only valid (belonging to real voters) public keys should be counted
-var signatureResponses map[string]msgs.SignatureResponse = map[string]msgs.SignatureResponse{}
+var signatureResponses map[string][]byte = map[string][]byte{}
+var responseLock sync.Mutex
 
-// A set of voter public keys
-var voterKeys map[string]struct{} = map[string]struct{}{}
-
-func stringKey(k *msgs.PublicKey) string {
-	keyBytes, err := proto.Marshal(k)
-	if err != nil {
-		panic(err)
+func getResponse(keyString string, r *msgs.SignatureRequest) []byte {
+	responseLock.Lock()
+	responseData, ok := signatureResponses[keyString]
+	if !ok {
+		var response msgs.SignatureResponse
+		response.Request = r
+		response.BlindedBallotSignature = sign.BlindSign(ballotPrivateKey, r.BlindedBallot)
+		responseData, _ = proto.Marshal(&response)
+		signatureResponses[keyString] = responseData
+		fmt.Printf("Signed ballot for %s\n", *keys.UnpackKey(r.VoterPublicKey))
 	}
-	return string(keyBytes)
+	responseLock.Unlock()
+	return responseData
 }
+
 
 func HandelSignatureRequest(data []byte, c net.Conn) {
 	var r msgs.SignatureRequest
@@ -54,23 +66,15 @@ func HandelSignatureRequest(data []byte, c net.Conn) {
 		return
 	}
 
-	keyString := stringKey(r.VoterPublicKey)
-	_, ok := voterKeys[keyString]
-	if !ok {
-		fmt.Println("SignatureRequest with unknown key:", keyString)
-		server.ConnectionError(c)
-		return
+	keyString := keys.StringKey(r.VoterPublicKey)
+	
+	if !sign.CheckSig(voteListKey, []byte(keyString), r.KeySignature) {
+	    fmt.Println("SignatureRequest's KeySignature Signature is invalid")
+	    server.ConnectionError(c)
+		return 
 	}
 
-	// TODO: need lock around this
-	response, ok := signatureResponses[keyString]
-	if !ok {
-		response.Request = &r
-		response.BlindedBallotSignature = sign.BlindSign(&ballotPrivateKey, r.BlindedBallot)
-		signatureResponses[keyString] = response
-		fmt.Printf("Signed ballot for %s\n", *keys.UnpackKey(r.VoterPublicKey))
-	}
+	responseData := getResponse(keyString, &r)
 
-	responseData, err := proto.Marshal(&response)
 	server.SendBlock(msg.SignatureResponse, responseData, c)
 }
