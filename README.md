@@ -87,10 +87,9 @@ introduce some fraud if people are still trying to vote right up to and/or after
 
 The Design
 ==========
-
-- A document (the `election description`) listing the public keys for the various involved servers, and any other needed meta dada (like what is being voted on)
-is published
-- A set of public keys for registered voters is published. This does not need to (and likely should not be) anonymized.
+- A set of public keys for registered voters is collected. This does not need to (and likely should not be) anonymized.
+- A document (the `election description`) listing the public keys for the various involved servers, all the voter public keys, and any other needed meta dada (like what is being voted on)
+is published. If there are many voters, a hash of the list of voters (or the root of a tree of hashes) can be included instead of the full list (which would be published separately)
 - Voters cast their votes (process below)
 - Election ends
 - Votes are displayed (anonymously) in a public table
