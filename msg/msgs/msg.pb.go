@@ -205,5 +205,261 @@ func (m *VoteResponse) GetBallotEntrySignature() []byte {
 	return nil
 }
 
+type Voter struct {
+	Name             *string    `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	Key              *PublicKey `protobuf:"bytes,2,opt,name=key" json:"key,omitempty"`
+	Signature        []byte     `protobuf:"bytes,3,opt,name=signature" json:"signature,omitempty"`
+	XXX_unrecognized []byte     `json:"-"`
+}
+
+func (m *Voter) Reset()         { *m = Voter{} }
+func (m *Voter) String() string { return proto.CompactTextString(m) }
+func (*Voter) ProtoMessage()    {}
+
+func (m *Voter) GetName() string {
+	if m != nil && m.Name != nil {
+		return *m.Name
+	}
+	return ""
+}
+
+func (m *Voter) GetKey() *PublicKey {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *Voter) GetSignature() []byte {
+	if m != nil {
+		return m.Signature
+	}
+	return nil
+}
+
+type Server struct {
+	Address          *string    `protobuf:"bytes,1,opt,name=address" json:"address,omitempty"`
+	Key              *PublicKey `protobuf:"bytes,2,opt,name=key" json:"key,omitempty"`
+	XXX_unrecognized []byte     `json:"-"`
+}
+
+func (m *Server) Reset()         { *m = Server{} }
+func (m *Server) String() string { return proto.CompactTextString(m) }
+func (*Server) ProtoMessage()    {}
+
+func (m *Server) GetAddress() string {
+	if m != nil && m.Address != nil {
+		return *m.Address
+	}
+	return ""
+}
+
+func (m *Server) GetKey() *PublicKey {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+type ElectionConfig struct {
+	VoterListServer                *Server  `protobuf:"bytes,1,opt,name=voterListServer" json:"voterListServer,omitempty"`
+	BallotServer                   *Server  `protobuf:"bytes,2,opt,name=ballotServer" json:"ballotServer,omitempty"`
+	VoteServer                     *Server  `protobuf:"bytes,3,opt,name=voteServer" json:"voteServer,omitempty"`
+	FinalVoteSetServer             *Server  `protobuf:"bytes,4,opt,name=finalVoteSetServer" json:"finalVoteSetServer,omitempty"`
+	FinalSignatureRequestSetServer *Server  `protobuf:"bytes,5,opt,name=finalSignatureRequestSetServer" json:"finalSignatureRequestSetServer,omitempty"`
+	Voters                         []*Voter `protobuf:"bytes,6,rep,name=voters" json:"voters,omitempty"`
+	BallotDescription              *string  `protobuf:"bytes,7,opt,name=ballotDescription" json:"ballotDescription,omitempty"`
+	XXX_unrecognized               []byte   `json:"-"`
+}
+
+func (m *ElectionConfig) Reset()         { *m = ElectionConfig{} }
+func (m *ElectionConfig) String() string { return proto.CompactTextString(m) }
+func (*ElectionConfig) ProtoMessage()    {}
+
+func (m *ElectionConfig) GetVoterListServer() *Server {
+	if m != nil {
+		return m.VoterListServer
+	}
+	return nil
+}
+
+func (m *ElectionConfig) GetBallotServer() *Server {
+	if m != nil {
+		return m.BallotServer
+	}
+	return nil
+}
+
+func (m *ElectionConfig) GetVoteServer() *Server {
+	if m != nil {
+		return m.VoteServer
+	}
+	return nil
+}
+
+func (m *ElectionConfig) GetFinalVoteSetServer() *Server {
+	if m != nil {
+		return m.FinalVoteSetServer
+	}
+	return nil
+}
+
+func (m *ElectionConfig) GetFinalSignatureRequestSetServer() *Server {
+	if m != nil {
+		return m.FinalSignatureRequestSetServer
+	}
+	return nil
+}
+
+func (m *ElectionConfig) GetVoters() []*Voter {
+	if m != nil {
+		return m.Voters
+	}
+	return nil
+}
+
+func (m *ElectionConfig) GetBallotDescription() string {
+	if m != nil && m.BallotDescription != nil {
+		return *m.BallotDescription
+	}
+	return ""
+}
+
+type VoterData struct {
+	Name                   *string       `protobuf:"bytes,8,opt,name=name" json:"name,omitempty"`
+	Key                    *PrivateKey   `protobuf:"bytes,1,opt,name=key" json:"key,omitempty"`
+	ElectionConfig         []byte        `protobuf:"bytes,2,opt" json:"ElectionConfig,omitempty"`
+	KeySignature           []byte        `protobuf:"bytes,3,opt,name=keySignature" json:"keySignature,omitempty"`
+	Ballot                 []byte        `protobuf:"bytes,4,opt,name=ballot" json:"ballot,omitempty"`
+	BlindingFactor         []byte        `protobuf:"bytes,5,opt,name=blindingFactor" json:"blindingFactor,omitempty"`
+	BlindedBallotSignature []byte        `protobuf:"bytes,6,opt,name=blindedBallotSignature" json:"blindedBallotSignature,omitempty"`
+	VoteResponse           *VoteResponse `protobuf:"bytes,7,opt,name=voteResponse" json:"voteResponse,omitempty"`
+	XXX_unrecognized       []byte        `json:"-"`
+}
+
+func (m *VoterData) Reset()         { *m = VoterData{} }
+func (m *VoterData) String() string { return proto.CompactTextString(m) }
+func (*VoterData) ProtoMessage()    {}
+
+func (m *VoterData) GetName() string {
+	if m != nil && m.Name != nil {
+		return *m.Name
+	}
+	return ""
+}
+
+func (m *VoterData) GetKey() *PrivateKey {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *VoterData) GetElectionConfig() []byte {
+	if m != nil {
+		return m.ElectionConfig
+	}
+	return nil
+}
+
+func (m *VoterData) GetKeySignature() []byte {
+	if m != nil {
+		return m.KeySignature
+	}
+	return nil
+}
+
+func (m *VoterData) GetBallot() []byte {
+	if m != nil {
+		return m.Ballot
+	}
+	return nil
+}
+
+func (m *VoterData) GetBlindingFactor() []byte {
+	if m != nil {
+		return m.BlindingFactor
+	}
+	return nil
+}
+
+func (m *VoterData) GetBlindedBallotSignature() []byte {
+	if m != nil {
+		return m.BlindedBallotSignature
+	}
+	return nil
+}
+
+func (m *VoterData) GetVoteResponse() *VoteResponse {
+	if m != nil {
+		return m.VoteResponse
+	}
+	return nil
+}
+
+type ObserverData struct {
+	ElectionConfig         []byte          `protobuf:"bytes,2,opt" json:"ElectionConfig,omitempty"`
+	KeySignature           []byte          `protobuf:"bytes,3,opt,name=keySignature" json:"keySignature,omitempty"`
+	Ballot                 []byte          `protobuf:"bytes,4,opt,name=ballot" json:"ballot,omitempty"`
+	BlindingFactor         []byte          `protobuf:"bytes,5,opt,name=blindingFactor" json:"blindingFactor,omitempty"`
+	BlindedBallotSignature []byte          `protobuf:"bytes,6,opt,name=blindedBallotSignature" json:"blindedBallotSignature,omitempty"`
+	Votes                  []*Vote         `protobuf:"bytes,8,rep,name=votes" json:"votes,omitempty"`
+	VoteResponses          []*VoteResponse `protobuf:"bytes,7,rep,name=voteResponses" json:"voteResponses,omitempty"`
+	XXX_unrecognized       []byte          `json:"-"`
+}
+
+func (m *ObserverData) Reset()         { *m = ObserverData{} }
+func (m *ObserverData) String() string { return proto.CompactTextString(m) }
+func (*ObserverData) ProtoMessage()    {}
+
+func (m *ObserverData) GetElectionConfig() []byte {
+	if m != nil {
+		return m.ElectionConfig
+	}
+	return nil
+}
+
+func (m *ObserverData) GetKeySignature() []byte {
+	if m != nil {
+		return m.KeySignature
+	}
+	return nil
+}
+
+func (m *ObserverData) GetBallot() []byte {
+	if m != nil {
+		return m.Ballot
+	}
+	return nil
+}
+
+func (m *ObserverData) GetBlindingFactor() []byte {
+	if m != nil {
+		return m.BlindingFactor
+	}
+	return nil
+}
+
+func (m *ObserverData) GetBlindedBallotSignature() []byte {
+	if m != nil {
+		return m.BlindedBallotSignature
+	}
+	return nil
+}
+
+func (m *ObserverData) GetVotes() []*Vote {
+	if m != nil {
+		return m.Votes
+	}
+	return nil
+}
+
+func (m *ObserverData) GetVoteResponses() []*VoteResponse {
+	if m != nil {
+		return m.VoteResponses
+	}
+	return nil
+}
+
 func init() {
 }

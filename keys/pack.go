@@ -61,8 +61,8 @@ func UnpackPrivateKey(k *msgs.PrivateKey) *rsa.PrivateKey {
 }
 
 // trivial read all helper
-func LoadBytes(path string) []byte{
-    // open input file
+func LoadBytes(path string) []byte {
+	// open input file
 	fi, err := os.Open(path)
 	if err != nil {
 		panic(err)
@@ -82,7 +82,7 @@ func LoadBytes(path string) []byte{
 
 // Load key from file
 func LoadKey(path string) *msgs.PublicKey {
-	data:=LoadBytes(path)
+	data := LoadBytes(path)
 	var k msgs.PublicKey
 	err := proto.Unmarshal(data, &k)
 	if err != nil {
@@ -93,7 +93,7 @@ func LoadKey(path string) *msgs.PublicKey {
 
 // Load key from file
 func LoadPrivateKey(path string) *msgs.PrivateKey {
-	data:=LoadBytes(path)
+	data := LoadBytes(path)
 	var k msgs.PrivateKey
 	err := proto.Unmarshal(data, &k)
 	if err != nil {

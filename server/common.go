@@ -26,6 +26,7 @@ func Start(handlers HandlerMap) {
 
 func ConnectionError(c net.Conn) {
 	fmt.Println("connectionError")
+	SendBlock(msg.InvalidRequest, []byte("Error!"), c)
 }
 
 func handelCon(c net.Conn, handlers HandlerMap) {

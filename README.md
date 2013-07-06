@@ -3,6 +3,22 @@ election
 
 A start at implementing an online minimum trust secret ballot election system.
 
+Status
+------
+
+In progress, not usable.
+
+Currently, there is a working server, and a working client that implement the full voting protocol,
+including all the signatures and almost all of the signature validation.
+
+There are currently no tools for setting up elections, creating lists of voters, ending elections,
+sharing the election results etc. Thus the this system is not yet usable.
+
+Executables:
+- createVoter.go creates some test voters
+- createElection.go creates a test election for the test voters
+- server.go runs all the servers 
+- client.go casts a ballot as one of the test voters
 
 Background
 ==========

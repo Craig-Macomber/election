@@ -4,6 +4,8 @@ package msgs;
 // VoterListKey: signs voter public keys
 // BallotKey: signs blinded ballots, at most one per voter
 // VoteKey: signs ballots that are submitted to be counted
+// FinalVoteSetKey: signs the final set of votes
+// FinalSignatureRequestSetKey: signs the final set of SignatureRequests
 
 message PublicKey{
     optional bytes N = 1;
@@ -41,4 +43,68 @@ message BallotEntry {
 message VoteResponse {
     optional bytes ballotEntry = 1;
     optional bytes ballotEntrySignature = 2; // ballotEntry signed with VoteKey
+}
+
+message Voter {
+    optional string name = 1;
+    optional PublicKey key = 2;
+    optional bytes signature = 3; // Signature for key signed with VoterListKey
+}
+
+message Server {
+    optional string address = 1;
+    optional PublicKey key = 2;
+}
+
+message ElectionConfig {
+    optional Server voterListServer = 1;
+    optional Server ballotServer = 2;
+    optional Server voteServer = 3;
+    optional Server finalVoteSetServer = 4;
+    optional Server finalSignatureRequestSetServer = 5;
+    
+    // ElectionConfig should have some content thats sufficent to prove
+    // A list of voters is correct. This could be a hash of the list, since the list could
+    // be larger than desired to be in the ElectionConfig itself.
+    // For now the whole list is used for simplicity.
+    repeated Voter voters = 6;
+    
+    // Description of what their vote means for the voter
+    optional string ballotDescription = 7;
+}
+
+// Data a Voter may want to keep locally
+message VoterData {
+    optional string name = 8;
+    // The voter's private key should be generated and store before the election.
+    // The corosping public key needs to be submitted to be included in the ElectionConfig
+    optional PrivateKey key = 1; // The private key for the voter
+    
+    // User should verify the Hash(ElectionConfig) with a trusted athority
+    optional bytes ElectionConfig = 2; // Kept serialized so hash can easily be checked
+    
+    optional bytes keySignature = 3; // Signature for key signed with VoterListKey
+    optional bytes ballot = 4;
+    optional bytes blindingFactor = 5;
+    optional bytes blindedBallotSignature = 6;
+    
+    optional VoteResponse voteResponse = 7;
+}
+
+// Data an Observer may want to keep locally
+message ObserverData {
+    // User should verify the Hash(ElectionConfig) with a trusted athority
+    optional bytes ElectionConfig = 2; // Kept serialized so hash can easily be checked
+    
+    optional bytes keySignature = 3; // Signature for key signed with VoterListKey
+    optional bytes ballot = 4;
+    optional bytes blindingFactor = 5;
+    optional bytes blindedBallotSignature = 6;
+    
+    // Known to exist votes you may with to check submit ok (Get back a valid VoteResponse)
+    // Once you have a valid VoteResponse for a vote, its safe to wait for the final ballot list
+    // and just prove inclusion there
+    repeated Vote votes = 8;
+    // Known to exist votes you may wish to prove inclusion in the final list
+    repeated VoteResponse voteResponses = 7;
 }

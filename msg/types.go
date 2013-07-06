@@ -9,4 +9,6 @@ const (
 	VoteResponse
 	KeySignatureRequest
 	KeySignatureResponse
+
+	InvalidRequest
 )

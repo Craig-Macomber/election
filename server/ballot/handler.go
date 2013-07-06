@@ -9,6 +9,7 @@ import (
 	"code.google.com/p/goprotobuf/proto"
 	"crypto/rsa"
 	"fmt"
+	"github.com/Craig-Macomber/election/config"
 	"github.com/Craig-Macomber/election/keys"
 	"github.com/Craig-Macomber/election/msg"
 	"github.com/Craig-Macomber/election/msg/msgs"
@@ -19,11 +20,12 @@ import (
 )
 
 var ballotPrivateKey *rsa.PrivateKey
-var voteListKey *rsa.PublicKey
+var voterListKey *rsa.PublicKey
 
 func init() {
-	ballotPrivateKey = keys.UnpackPrivateKey(keys.LoadPrivateKey("serverPrivateData/ballotKey"))
-	voteListKey = keys.UnpackKey(keys.LoadKey("publicData/voterListKey"))
+	ballotPrivateKey = keys.UnpackPrivateKey(config.LoadServerKey("ballotKey"))
+	config := config.Load()
+	voterListKey = keys.UnpackKey(config.VoterListServer.Key)
 }
 
 // Map of voter public key -> msg.SignatureResponse containing the signed ballot
@@ -50,7 +52,6 @@ func getResponse(keyString string, r *msgs.SignatureRequest) []byte {
 	return responseData
 }
 
-
 func HandelSignatureRequest(data []byte, c net.Conn) {
 	var r msgs.SignatureRequest
 	err := proto.Unmarshal(data, &r)
@@ -67,11 +68,11 @@ func HandelSignatureRequest(data []byte, c net.Conn) {
 	}
 
 	keyString := keys.StringKey(r.VoterPublicKey)
-	
-	if !sign.CheckSig(voteListKey, []byte(keyString), r.KeySignature) {
-	    fmt.Println("SignatureRequest's KeySignature Signature is invalid")
-	    server.ConnectionError(c)
-		return 
+
+	if !sign.CheckSig(voterListKey, []byte(keyString), r.KeySignature) {
+		fmt.Println("SignatureRequest's KeySignature Signature is invalid")
+		server.ConnectionError(c)
+		return
 	}
 
 	responseData := getResponse(keyString, &r)
