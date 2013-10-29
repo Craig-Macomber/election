@@ -93,7 +93,7 @@ is published. If there are many voters, a hash of the list of voters (or the roo
 - Voters cast their votes (process below)
 - Election ends
 - Votes are displayed (anonymously) in a public table
-- Subset of voters that has ballots signed is displayed in a public table (including their signature requests signed with their private keys)
+- Subset of voters that has ballots signed is displayed in a public table (including a signed subsection of their signature requests signed with their private keys. This does not include the blinded ballot!)
 
 The vote submission process
 - Voter constructs a ballot containing their choices
@@ -118,3 +118,57 @@ get them a valid response or provide evidence that the election is invalid. Sinc
 
 The only major concern as far as secret ballot anonymity is determining the origin of the final vote submission. To solve this, submission through Tor is recommended. There is still potential for timing attacks,
 so some variable delay between getting the ballot signed and submitted is also recommended. The election could be broken up (temporally) into 2 stages to solve this.
+
+Attacks
+=======
+
+Here is a brief summery of some of the known attacks, including ones that have been mitigated.
+
+Keep in mind that the goal of this project is to implement a system better than main in ballots, which also suffer from many very serious issues.
+
+Currently all attacks here are related to coercion, which is an unsolvable problem.
+No flaws in the security allowing stealing a vote, or adding votes or removing votes have been found so far.
+
+Mitigated Attacks
+-----------------
+Attacks that have been found and fixed so far.
+
+Blinding factor disclosure coercion attack: In the original design,
+the blinded ballots were displayed as part of the signature request for each voter after the election.
+This enabled an attacker to be able to request that a voter use software that allowed extracting blinding factor,
+so the voter could be forced/asked to disclose this, which would be sufficient to prove which vote was theirs.
+This allows the attacker to punish or reward voters based on their vote, since proof of how they voted can be provided.
+The fix is to not display the blinded ballots.
+
+This attack is strictly a coercion attack: it helps people to illegally coercion voters, but it does not enable any other kind of fraud.
+As discussed above, preventing coercion attacks completely is impossible, but this one was particularly easy to exploit in a wide spread manner
+(robust pay per vote would be easy) and easy to fix.
+
+Unsolved attacks
+----------------
+Private key selling/extortion: A voter can be forced to disclose their private key, or can sell it
+(and thus their vote assuming they don't vote first, which their buyer could complain about).
+
+This is the equivalent of selling your ballot in a mail in system. In mail in systems (such as in Washington State) where you must physically sign the envelope,
+this is equivalent you selling your ballot along with a pre-signed envelope.
+
+It appears that a voter needs to be able to verify that his public key is included in the election, which apparently
+necessitates that an attacker can, if given a public key, can verify if its valid or not (at the very least, they can try and vote with it).
+Thus it appears that there is no possible complete mitigation for this attack.
+Some delayed response/verification from the servers could help reduce the ease/effectiveness of the attack (but not by a lot), but that complicates validation and hurts ease of use drastically.
+
+
+Paid ballot signing Attack:
+The voter provides a payment address (say bitcoin) to the attacker and requests a ballot from the attacker.
+The attacker provides the ballot. The voter gets it signed (consuming their right to vote with it).
+The voter then provides this ballot to the attacker to prove they got it signed. The attacker (and optionally the voter) cast the ballot.
+Once the attacker has proof the ballot will be included (with this election system, this is as soon as they get the signed ballot, but they could wait until after the elections)
+the attacker pays the voter.
+
+This attack, with proper use of bitcoin and Tor would be easy to do in a manner that is automated for the attacker, anonymous for the voter, and pseudonymous for the attacker (via Tor hidden service).
+This means the attacker could get a reputation of actually paying out over multiple elections and thus could effectively buy votes with no danger of getting caught for them or the voters.
+
+This is a very serious and crippling attack. Currently a solution is not known. If you have suggestions, let me know.
+
+The same attack could be done via private key selling, but this would endanger the voter (the attacker would know who they were and could report it).
+ 
