@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"code.google.com/p/goprotobuf/proto"
 	"crypto/rsa"
+	"crypto/rand"
 	"fmt"
 	"github.com/Craig-Macomber/election/config"
 	"github.com/Craig-Macomber/election/keys"
@@ -11,6 +12,7 @@ import (
 	"github.com/Craig-Macomber/election/msg/msgs"
 	"github.com/Craig-Macomber/election/sign"
 	"net"
+	"encoding/base64"
 )
 
 var ballotKey *rsa.PublicKey
@@ -28,27 +30,97 @@ func LoadVoterData(path string) *msgs.VoterData {
 	return &voterData
 }
 
+
+func load(name string) (*msgs.ElectionConfig, *msgs.VoterData) {
+    privateInfo := LoadVoterData("demoElection/voterPrivate/" + name)
+	configBytes := config.LoadBytes()
+	privateInfo.ElectionConfig = configBytes
+	config := config.Unpack(privateInfo.ElectionConfig)
+	return config,privateInfo
+}
+
+func ConfigHash(privateInfo *msgs.VoterData) []byte {
+    return sign.Hash(privateInfo.ElectionConfig)
+}
+
+type SignatureStatus uint8
+
+const (
+	Missing SignatureStatus = iota
+	Invalid
+	Valid
+)
+
+func CheckKeySig(privateInfo *msgs.VoterData) SignatureStatus{
+    if privateInfo.KeySignature==nil {
+        return Missing
+    }
+    config := config.Unpack(privateInfo.ElectionConfig)
+    voterListKey := keys.UnpackKey(config.VoterListServer.Key)
+    publicKey:=PublicKey(privateInfo)
+    if sign.CheckSig(voterListKey,publicKey,privateInfo.KeySignature) {
+        return Valid
+    }
+    return Invalid
+}
+
+func fillInfo(privateInfo *msgs.VoterData) {
+    //config := config.Unpack(privateInfo.ElectionConfig)
+    for CheckKeySig(privateInfo)!=Valid {
+        // TODO: prompt user here? (Maybe have an interactive mode, only try N times if not interactive?
+        fmt.Println("Attempting to get valid keySignature from voter list server...")
+        var err error
+        privateInfo.KeySignature, err = GetKeySig(PublicKey(privateInfo))
+	    if err != nil {
+		    fmt.Println(err)
+	    } else {
+	        fmt.Println("Got keySignature from voter list server. Checking...")
+	    }
+    }
+    fmt.Println("Got valid keySignature from voter list server.")
+}
+
+func PublicKey(privateInfo *msgs.VoterData) []byte {
+    return []byte(keys.StringKey(privateInfo.Key.PublicKey))
+}
+
+// Prefix ballot with random 64 bits to make ballot unique.
+// Ballots get de-duplicated by the voteServer, so its important
+// that clients make their ballot unique.
+func PrefixBallot(payload []byte) []byte{
+    const randomLength=8
+    b:=make([]byte,len(payload)+randomLength)
+    _,err:=rand.Read(b[:randomLength])
+    if err!=nil {
+        panic(err)
+    }
+    copy(b[randomLength:],payload)
+    return b
+}
+
 func main() {
 	name := "TestVoter1"
-	privateInfo := LoadVoterData("demoElection/voterPrivate/" + name)
-	privateInfo.ElectionConfig = keys.LoadBytes(config.Path)
-	config := config.Load()
+	config,privateInfo:=load(name)
+	configHash := ConfigHash(privateInfo)
+	fmt.Printf("Loaded election config with hash: %s\n",base64.StdEncoding.EncodeToString(configHash))
+	
 	ballotKey = keys.UnpackKey(config.BallotServer.Key)
 	voteKey = keys.UnpackKey(config.VoteServer.Key)
 
-	msgKey := privateInfo.Key
-	voterKey := keys.UnpackPrivateKey(msgKey)
-
-	keySig, err := GetKeySig([]byte(keys.StringKey(msgKey.PublicKey)))
-	if err != nil {
-		panic(err)
-	}
+	voterKey := keys.UnpackPrivateKey(privateInfo.Key)
+    
+    fillInfo(privateInfo)
+    //var err error
+	//privateInfo.KeySignature, err = GetKeySig(PublicKey(privateInfo))
+	//if err != nil {
+	//	panic(err)
+	//}
 
 	// Construct ballot
 	// TODO: prompt user or read from file
-	ballot := []byte("ballot!!")
+	ballot := PrefixBallot([]byte("ballot!!"))
 
-	ballotSig, err := GetBallotSig(voterKey, keySig, ballot)
+	ballotSig, err := GetBallotSig(voterKey, privateInfo.KeySignature, ballot)
 	if err != nil {
 		panic(err)
 	}
@@ -58,7 +130,7 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("Cast ballot '%s' as %s", ballot, vote)
+	fmt.Printf("Cast ballot '%s' as %s\n", ballot, vote)
 }
 
 // Get signature from Voter List Server to prove our public key is valid

@@ -20,8 +20,9 @@ message PrivateKey{
 
 message SignatureRequest {
     optional PublicKey voterPublicKey = 1;
+    optional bytes electionSignature = 5; // hash of election config signed with voterPrivateKey
     optional bytes blindedBallot = 2;
-    optional bytes voterSignature = 3; // blindedBallot signed with voterPublicKey
+    optional bytes voterSignature = 3; // blindedBallot signed with voterPrivateKey
     optional bytes keySignature = 4; // voterPublicKey signed with VoterListKey
 }
 
@@ -80,8 +81,8 @@ message VoterData {
     // The corosping public key needs to be submitted to be included in the ElectionConfig
     optional PrivateKey key = 1; // The private key for the voter
     
-    // User should verify the Hash(ElectionConfig) with a trusted athority
-    optional bytes ElectionConfig = 2; // Kept serialized so hash can easily be checked
+    // User should verify the Hash(electionConfig) with a trusted athority
+    optional bytes electionConfig = 2; // Kept serialized so hash can easily be checked
     
     optional bytes keySignature = 3; // Signature for key signed with VoterListKey
     optional bytes ballot = 4;

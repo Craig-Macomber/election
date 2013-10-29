@@ -4,27 +4,27 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
-	_ "crypto/sha512"
+	_ "crypto/sha256"
 	"io"
 	"math/big"
 )
 
-var hashType crypto.Hash = crypto.SHA512
+var hashType crypto.Hash = crypto.SHA256
 
-func hash(data []byte) []byte {
+func Hash(data []byte) []byte {
 	h := hashType.New()
 	h.Write(data)
 	return h.Sum(make([]byte, 0))
 }
 
 func Sign(key *rsa.PrivateKey, data []byte) (sig []byte, err error) {
-	hashResult := hash(data)
+	hashResult := Hash(data)
 	sig, err = rsa.SignPKCS1v15(rand.Reader, key, hashType, hashResult)
 	return
 }
 
 func CheckSig(key *rsa.PublicKey, data, sig []byte) bool {
-	hashResult := hash(data)
+	hashResult := Hash(data)
 	err := rsa.VerifyPKCS1v15(key, hashType, hashResult, sig)
 	return err == nil
 }

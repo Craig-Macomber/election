@@ -11,14 +11,21 @@ var electionPath string = "demoElection/"
 
 var Path string = electionPath + "config"
 
-func Load() *msgs.ElectionConfig {
-	data := keys.LoadBytes(Path)
+func LoadBytes() []byte {
+	return keys.LoadBytes(Path)
+}
+
+func Unpack(data []byte) *msgs.ElectionConfig {
 	var config msgs.ElectionConfig
 	err := proto.Unmarshal(data, &config)
 	if err != nil {
 		panic(err)
 	}
 	return &config
+}
+
+func Load() *msgs.ElectionConfig {
+	return Unpack(LoadBytes())
 }
 
 // TODO: move this elsewhere
