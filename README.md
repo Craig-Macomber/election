@@ -119,6 +119,19 @@ get them a valid response or provide evidence that the election is invalid. Sinc
 The only major concern as far as secret ballot anonymity is determining the origin of the final vote submission. To solve this, submission through Tor is recommended. There is still potential for timing attacks,
 so some variable delay between getting the ballot signed and submitted is also recommended. The election could be broken up (temporally) into 2 stages to solve this.
 
+Diagrams
+--------
+When interacting with one of the servers, this process is followed:
+![Voting Process](/documentation/ElectionServerRequest_Flow.png "Voting Process")
+
+Since all operations with the servers are idempotent, and none (in either the request or responses) expose both the content of your vote and your identity, its perfectly safe to let others try and submit your requests. If they are malicious, it does no harm. This approach can be used to expose a misbeahving election server: if your ballot signing request is not processed correctly for example, you could have someone else, say the UN, submit it for you, and forward the response. If your request is still not handeled correctly, they now have proof your request has wrongfully been denied, and otherwise you have our needed response and can continue.
+
+
+
+The entire process of casting a vote in the election from a voter's perspective:
+![Voting Process](/documentation/Election_Flow.png "Voting Process")
+
+
 Attacks
 =======
 
