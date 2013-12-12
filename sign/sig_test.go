@@ -33,6 +33,15 @@ func TestBlindSign(t *testing.T) {
 	}
 }
 
+func TestBlindSignDoubleValidate(t *testing.T) {
+	key, _ := rsa.GenerateKey(rand.Reader, 1024)
+	blinded, _ := Blind(&key.PublicKey, data)
+	sig := BlindSign(key, blinded)
+	if CheckBlindSig(&key.PublicKey, blinded, sig) {
+		t.Errorf("sig matched for blinded data! Testing that you can't cast a blinded ballot, in addition to the unblinded one. This test fails, since it passes validation.")
+	}
+}
+
 func TestRawSign(t *testing.T) {
 	key, _ := rsa.GenerateKey(rand.Reader, 1024)
 	sig := BlindSign(key, data)
